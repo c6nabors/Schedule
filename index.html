@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html style="background-color:black;">
+<head>
+  <meta charset="UTF-8">
+  <title>LadEngine</title>
+  <style>
+    body {
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    /* Add styles for the overlay text */
+    #scheduleContainer {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      z-index: 9999;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 10px;
+    }
+
+        #ToggleContainer {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      color: white;
+      z-index: 9999;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 10px;
+    }
+
+    #listContainer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: white;
+      z-index: 9999;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 10px;
+    }
+
+    /* Styles for the input and button */
+    #addItemInput {
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      width: 200px;
+    }
+
+    #addItemButton, #reset  {
+      padding: 6px 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #addItemButton:hover {
+      background-color: #45a049;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      cursor: pointer;
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .delete-button {
+      display: inline-block;
+      vertical-align: middle;
+      opacity: 0%;
+    }
+
+    li:hover .delete-button {
+      opacity: 100%;
+      transition: opacity 0.5s;
+      display: inline-block;
+      margin-left: 10px;
+    }
+    input[type=checkbox] {
+    transform: scale(2);
+    margin-right: 10px;
+}
+  </style>
+</head>
+<body>
+  <!-- Schedule -->
+  <div id="scheduleContainer">
+    <div id="schedule">
+      <strong>Schedule:</strong> <br><br>
+      P1 - 7:25 - 8:11 <br>
+      P2 - 8:16 - 9:02 <br>
+      P3 - 9:07 - 9:53 <br>
+      P4 - 9:58 - 10:26 <br>
+      LUNCH - 10:26 - 10:56 <br>
+      P5 - 11:01 - 11:47 <br>
+      P6 - 11:52 - 12:38 <br>
+      P7 - 12:43 - 1:29 <br>
+      P8 - 1:34 - 2:20 <br><br>
+      <strong>Wednesday:</strong> <br><br>
+      P1 - 8:00 - 8:41 <br>
+      P2 - 8:46 - 9:27 <br>
+      P3 - 9:32 - 10:13 <br>
+      P4 - 10:18 - 10:46 <br>
+      LUNCH - 10:46 - 11:16 <br>
+      P5 - 11:21 - 12:02 <br>
+      P6 - 12:07 - 12:48 <br>
+      P7 - 12:53 - 1:34 <br>
+      P8 - 1:39 - 2:20 <br><br>
+      <input type="color" value="#000000" id="color" onchange="changeColor();saveColor();"></input>
+            <input type="color" value="#FFFFFF" id="background" onchange="changeBackground();saveColor();"></input>
+      <br>
+      <button onclick="ResetValues();changeColor();changeBackground();" id="reset">Reset Colors</button>
+    </div>
+  </div>
+
+   <div id="ToggleContainer">
+    <div id="toggle">
+      <input type="checkbox" id="toggleupdates" onchange="change();" checked onclick="checkbox();">Updates</input>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div id="listContainer">
+    <ul id="list"></ul>
+    <!-- Input field and button for adding items -->
+    <input type="text" id="addItemInput" placeholder="Enter a new item" onkeyup="addItem(event)">
+    <button id="addItemButton" onclick="addItem(event)">Add Item</button>
+  </div>
+
+  <canvas id="myCanvas" width="300" height="150">
+    Your browser does not support the HTML5 canvas tag.
+  </canvas>
+<script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.13.0/Sortable.min.js"></script>
+  <script>
+    function loadList() {
+      var savedList = localStorage.getItem('list');
+      if (savedList) {
+        document.getElementById('list').innerHTML = savedList;
+      }
+      makeListSortable();
+    }
+
+    function saveList() {
+      var list = document.getElementById('list').innerHTML;
+      localStorage.setItem('list', list);
+    }
+
+    function saveColor() {
+      var color = document.getElementById('color').value
+      var colorback = document.getElementById('background').value
+      localStorage.setItem('color1', color)
+      localStorage.setItem('color2', colorback)
+    }
+    function loadColor() {
+      var savedColor = localStorage.getItem('color1');
+      if (savedColor) {
+        document.getElementById('color').value = savedColor;
+      }
+      var savedBackground = localStorage.getItem('color2');
+      if (savedBackground) {
+        document.getElementById('background').value = savedBackground;
+      }
+      changeColor();
+      changeBackground();
+    }
+
+    function addItem(event) {
+      if (event.key === 'Enter' || event.type === 'click') {
+        var itemInput = document.getElementById('addItemInput');
+        var itemText = itemInput.value.trim();
+
+        if (itemText !== '') {
+          var listItem = document.createElement('li');
+          listItem.innerHTML = '<span oncontextmenu="editItem(this); return false;">' + itemText + '</span><button class="delete-button" onclick="removeItem(this.parentNode)">Delete</button>';
+          document.getElementById('list').appendChild(listItem);
+          itemInput.value = ''; // Clear the input after adding
+          saveList();
+          makeListSortable();
+        }
+      }
+    }
+
+    function updateItem(input) {
+      if (event.key === 'Enter' || event.type === 'blur') {
+        var newText = input.value;
+        var span = input.parentNode;
+        span.innerHTML = newText;
+        span.oncontextmenu = function() {
+          editItem(this);
+          return false;
+        };
+        saveList();
+      }
+    }
+
+    function editItem(span) {
+      var text = span.textContent;
+      span.innerHTML = '<input type="text" value="' + text + '" onblur="updateItem(this)" onkeyup="updateItem(this)" />';
+      var input = span.querySelector('input');
+      input.focus();
+    }
+
+    function removeItem(item) {
+      var list = document.getElementById('list');
+      list.removeChild(item);
+      saveList();
+    }
+
+    function makeListSortable() {
+      var list = document.getElementById('list');
+      Sortable.create(list, {
+        animation: 150,
+        onUpdate: function() {
+          saveList();
+        }
+      });
+    }
+
+    // Load the list on page load
+    loadList();
+    loadColor();
+  </script>
+</body>
+</html>
